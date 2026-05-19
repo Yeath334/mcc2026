@@ -1,0 +1,686 @@
+=== Compiling with HIP/DCU + MPI ===
+=== Running 5 times (each run includes staging) ===
+
+--- Run 1/5 ---
+srun: ROUTE: split_hostlist: hl=f17r4n[00-01] tree_width 0
+[rank 1/2] Data path: /dev/shm/sst_cache/
+[rank 1/2] DOY range: 198 - 243 (46 days)
+[rank 0/2] Data path: /dev/shm/sst_cache/
+[rank 0/2] DOY range: 152 - 197 (46 days)
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 152...
+File scan complete.
+Loading initial window for DOY 198...
+Initial data copied to GPU.
+Initial data copied to GPU.
+DOY 152: io=0.00s  cmp=0.0637s  wr=0.00s  total=0.07s
+DOY 198: io=0.00s  cmp=0.0648s  wr=0.01s  total=0.07s
+DOY 153: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 199: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.11s
+DOY 154: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 200: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 155: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.11s
+DOY 201: io=0.02s  cmp=0.0821s  wr=0.00s  total=0.10s
+DOY 156: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 202: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.11s
+DOY 157: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 203: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.11s
+DOY 158: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 204: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.10s
+DOY 159: io=0.02s  cmp=0.0803s  wr=0.01s  total=0.10s
+DOY 205: io=0.02s  cmp=0.0819s  wr=0.01s  total=0.11s
+DOY 160: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.10s
+DOY 206: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 161: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 207: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.11s
+DOY 162: io=0.02s  cmp=0.0796s  wr=0.00s  total=0.10s
+DOY 208: io=0.02s  cmp=0.0812s  wr=0.01s  total=0.11s
+DOY 163: io=0.02s  cmp=0.0813s  wr=0.00s  total=0.10s
+DOY 209: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 164: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 210: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 165: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 211: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 166: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 212: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 167: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 213: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.11s
+DOY 168: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 214: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.11s
+DOY 169: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 215: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 170: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 216: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 171: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 217: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.11s
+DOY 172: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 218: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 173: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 219: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 174: io=0.02s  cmp=0.0821s  wr=0.00s  total=0.10s
+DOY 220: io=0.02s  cmp=0.0831s  wr=0.00s  total=0.11s
+DOY 175: io=0.02s  cmp=0.0819s  wr=0.01s  total=0.10s
+DOY 221: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.11s
+DOY 176: io=0.02s  cmp=0.0825s  wr=0.00s  total=0.11s
+DOY 222: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 177: io=0.02s  cmp=0.0822s  wr=0.00s  total=0.10s
+DOY 223: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 178: io=0.03s  cmp=0.0997s  wr=0.00s  total=0.13s
+DOY 224: io=0.08s  cmp=0.0857s  wr=0.00s  total=0.17s
+DOY 179: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.11s
+DOY 225: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.11s
+DOY 180: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 226: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.11s
+DOY 181: io=0.02s  cmp=0.0823s  wr=0.00s  total=0.10s
+DOY 227: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.10s
+DOY 182: io=0.02s  cmp=0.0821s  wr=0.00s  total=0.10s
+DOY 228: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 183: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 229: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 184: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.10s
+DOY 230: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 185: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 231: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 186: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 232: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 187: io=0.02s  cmp=0.0818s  wr=0.01s  total=0.10s
+DOY 233: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 188: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.11s
+DOY 234: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 189: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 235: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 190: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 236: io=0.02s  cmp=0.0792s  wr=0.00s  total=0.10s
+DOY 191: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.10s
+DOY 237: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 192: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.10s
+DOY 238: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.10s
+DOY 193: io=0.02s  cmp=0.0822s  wr=0.01s  total=0.11s
+DOY 239: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 194: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 240: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.11s
+DOY 195: io=0.02s  cmp=0.0816s  wr=0.01s  total=0.11s
+DOY 241: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 196: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 197: io=0.00s  cmp=0.0599s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 0/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.78 s  ( 12.6%)
+  Compute  (quickselect):        3.73 s  ( 59.8%)
+  Output write:                  0.21 s  (  3.4%)
+  ----------------------------------------
+  WALL TIME:                     6.23 s
+============================================
+DOY 242: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 243: io=0.00s  cmp=0.0592s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 1/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.87 s  ( 13.8%)
+  Compute  (quickselect):        3.71 s  ( 58.5%)
+  Output write:                  0.22 s  (  3.4%)
+  ----------------------------------------
+  WALL TIME:                     6.34 s
+============================================
+  Run 1 total time: 11.188454170 s
+
+--- Run 2/5 ---
+srun: ROUTE: split_hostlist: hl=f17r4n[00-01] tree_width 0
+[rank 0/2] Data path: /dev/shm/sst_cache/
+[rank 0/2] DOY range: 152 - 197 (46 days)
+[rank 1/2] Data path: /dev/shm/sst_cache/
+[rank 1/2] DOY range: 198 - 243 (46 days)
+SST raw format: float64  (converting to float32)
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+lon_num = 1440, lat_num = 721
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 198...
+File scan complete.
+Loading initial window for DOY 152...
+Initial data copied to GPU.
+Initial data copied to GPU.
+DOY 152: io=0.00s  cmp=0.0638s  wr=0.00s  total=0.07s
+DOY 198: io=0.00s  cmp=0.0647s  wr=0.00s  total=0.07s
+DOY 153: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 199: io=0.03s  cmp=0.0809s  wr=0.00s  total=0.11s
+DOY 154: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 200: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.10s
+DOY 155: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 201: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 156: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 202: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 157: io=0.02s  cmp=0.0794s  wr=0.00s  total=0.10s
+DOY 203: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 158: io=0.02s  cmp=0.0792s  wr=0.00s  total=0.10s
+DOY 204: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.10s
+DOY 159: io=0.02s  cmp=0.0792s  wr=0.01s  total=0.11s
+DOY 205: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 160: io=0.02s  cmp=0.0792s  wr=0.01s  total=0.10s
+DOY 206: io=0.02s  cmp=0.0802s  wr=0.01s  total=0.10s
+DOY 161: io=0.02s  cmp=0.0788s  wr=0.00s  total=0.10s
+DOY 207: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 162: io=0.02s  cmp=0.0785s  wr=0.00s  total=0.10s
+DOY 208: io=0.02s  cmp=0.0798s  wr=0.01s  total=0.11s
+DOY 163: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.11s
+DOY 209: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.10s
+DOY 164: io=0.02s  cmp=0.0825s  wr=0.00s  total=0.10s
+DOY 210: io=0.02s  cmp=0.0799s  wr=0.00s  total=0.10s
+DOY 165: io=0.02s  cmp=0.0801s  wr=0.01s  total=0.10s
+DOY 211: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 166: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 212: io=0.02s  cmp=0.0800s  wr=0.01s  total=0.10s
+DOY 167: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 213: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 168: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 214: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.10s
+DOY 169: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 215: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.11s
+DOY 170: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 216: io=0.02s  cmp=0.0795s  wr=0.00s  total=0.10s
+DOY 217: io=0.02s  cmp=0.0801s  wr=0.01s  total=0.11s
+DOY 171: io=0.05s  cmp=0.0819s  wr=0.01s  total=0.14s
+DOY 218: io=0.02s  cmp=0.0798s  wr=0.01s  total=0.10s
+DOY 172: io=0.02s  cmp=0.0805s  wr=0.01s  total=0.10s
+DOY 219: io=0.02s  cmp=0.0796s  wr=0.01s  total=0.11s
+DOY 173: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.10s
+DOY 174: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 220: io=0.02s  cmp=0.0798s  wr=0.01s  total=0.11s
+DOY 175: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.11s
+DOY 221: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.11s
+DOY 222: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.10s
+DOY 176: io=0.02s  cmp=0.0826s  wr=0.01s  total=0.11s
+DOY 223: io=0.02s  cmp=0.0801s  wr=0.01s  total=0.11s
+DOY 177: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 178: io=0.02s  cmp=0.0851s  wr=0.00s  total=0.11s
+DOY 224: io=0.07s  cmp=0.0808s  wr=0.00s  total=0.16s
+DOY 179: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.11s
+DOY 225: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.11s
+DOY 180: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.11s
+DOY 226: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.11s
+DOY 181: io=0.02s  cmp=0.0810s  wr=0.01s  total=0.11s
+DOY 227: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.10s
+DOY 182: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.11s
+DOY 228: io=0.02s  cmp=0.0796s  wr=0.01s  total=0.10s
+DOY 183: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.10s
+DOY 229: io=0.02s  cmp=0.0797s  wr=0.01s  total=0.11s
+DOY 184: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 230: io=0.02s  cmp=0.0793s  wr=0.00s  total=0.10s
+DOY 185: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 231: io=0.02s  cmp=0.0795s  wr=0.00s  total=0.10s
+DOY 186: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 232: io=0.02s  cmp=0.0791s  wr=0.02s  total=0.12s
+DOY 187: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 233: io=0.02s  cmp=0.0796s  wr=0.01s  total=0.11s
+DOY 188: io=0.02s  cmp=0.0812s  wr=0.01s  total=0.11s
+DOY 234: io=0.03s  cmp=0.0793s  wr=0.01s  total=0.11s
+DOY 189: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 235: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.11s
+DOY 190: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 236: io=0.02s  cmp=0.0793s  wr=0.01s  total=0.11s
+DOY 191: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 237: io=0.02s  cmp=0.0862s  wr=0.01s  total=0.12s
+DOY 192: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 238: io=0.02s  cmp=0.0860s  wr=0.00s  total=0.11s
+DOY 193: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 239: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.10s
+DOY 194: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 240: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.11s
+DOY 195: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 241: io=0.02s  cmp=0.0805s  wr=0.01s  total=0.10s
+DOY 196: io=0.06s  cmp=0.0807s  wr=0.00s  total=0.15s
+DOY 242: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 197: io=0.00s  cmp=0.0604s  wr=0.01s  total=0.07s
+
+============================================
+  TIMING SUMMARY [rank 0/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.87 s  ( 15.2%)
+  Compute  (quickselect):        3.67 s  ( 64.0%)
+  Output write:                  0.24 s  (  4.1%)
+  ----------------------------------------
+  WALL TIME:                     5.74 s
+============================================
+DOY 243: io=0.00s  cmp=0.0588s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 1/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.89 s  ( 15.3%)
+  Compute  (quickselect):        3.66 s  ( 63.2%)
+  Output write:                  0.28 s  (  4.8%)
+  ----------------------------------------
+  WALL TIME:                     5.78 s
+============================================
+  Run 2 total time: 9.778542736 s
+
+--- Run 3/5 ---
+srun: ROUTE: split_hostlist: hl=f17r4n[00-01] tree_width 0
+[rank 1/2] Data path: /dev/shm/sst_cache/
+[rank 1/2] DOY range: 198 - 243 (46 days)
+[rank 0/2] Data path: /dev/shm/sst_cache/
+[rank 0/2] DOY range: 152 - 197 (46 days)
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 198...
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 152...
+Initial data copied to GPU.
+DOY 198: io=0.00s  cmp=0.0644s  wr=0.01s  total=0.07s
+DOY 199: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 200: io=0.02s  cmp=0.0805s  wr=0.01s  total=0.10s
+Initial data copied to GPU.
+DOY 152: io=0.00s  cmp=0.0636s  wr=0.00s  total=0.07s
+DOY 201: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 153: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 202: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 154: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 203: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 155: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 204: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.10s
+DOY 156: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 205: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 157: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 206: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 158: io=0.02s  cmp=0.0794s  wr=0.00s  total=0.10s
+DOY 207: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 159: io=0.02s  cmp=0.0793s  wr=0.00s  total=0.10s
+DOY 208: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.11s
+DOY 160: io=0.02s  cmp=0.0790s  wr=0.00s  total=0.10s
+DOY 209: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 161: io=0.02s  cmp=0.0790s  wr=0.00s  total=0.10s
+DOY 210: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 162: io=0.02s  cmp=0.0781s  wr=0.00s  total=0.10s
+DOY 211: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 163: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 212: io=0.02s  cmp=0.0799s  wr=0.00s  total=0.10s
+DOY 164: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.10s
+DOY 213: io=0.02s  cmp=0.0799s  wr=0.00s  total=0.11s
+DOY 165: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 214: io=0.02s  cmp=0.0797s  wr=0.00s  total=0.10s
+DOY 166: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 215: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 167: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 216: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.11s
+DOY 168: io=0.02s  cmp=0.0802s  wr=0.01s  total=0.10s
+DOY 217: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.11s
+DOY 169: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 218: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.10s
+DOY 170: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 219: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 171: io=0.02s  cmp=0.0805s  wr=0.01s  total=0.10s
+DOY 220: io=0.02s  cmp=0.0813s  wr=0.00s  total=0.10s
+DOY 172: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 221: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 173: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 222: io=0.02s  cmp=0.0815s  wr=0.01s  total=0.10s
+DOY 174: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 223: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.10s
+DOY 175: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 176: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 224: io=0.08s  cmp=0.0841s  wr=0.01s  total=0.17s
+DOY 177: io=0.02s  cmp=0.0808s  wr=0.01s  total=0.10s
+DOY 225: io=0.02s  cmp=0.0812s  wr=0.01s  total=0.11s
+DOY 178: io=0.05s  cmp=0.0842s  wr=0.00s  total=0.14s
+DOY 226: io=0.02s  cmp=0.0813s  wr=0.00s  total=0.10s
+DOY 179: io=0.02s  cmp=0.0818s  wr=0.01s  total=0.10s
+DOY 227: io=0.02s  cmp=0.0815s  wr=0.01s  total=0.10s
+DOY 180: io=0.02s  cmp=0.0819s  wr=0.01s  total=0.11s
+DOY 228: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 181: io=0.02s  cmp=0.0821s  wr=0.01s  total=0.10s
+DOY 229: io=0.02s  cmp=0.0813s  wr=0.01s  total=0.10s
+DOY 230: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.11s
+DOY 182: io=0.02s  cmp=0.0818s  wr=0.02s  total=0.12s
+DOY 231: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 183: io=0.02s  cmp=0.0818s  wr=0.01s  total=0.11s
+DOY 184: io=0.02s  cmp=0.0815s  wr=0.01s  total=0.11s
+DOY 232: io=0.03s  cmp=0.0937s  wr=0.00s  total=0.12s
+DOY 185: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.11s
+DOY 233: io=0.02s  cmp=0.0910s  wr=0.00s  total=0.11s
+DOY 186: io=0.02s  cmp=0.0843s  wr=0.01s  total=0.11s
+DOY 234: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 235: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.10s
+DOY 187: io=0.02s  cmp=0.0821s  wr=0.00s  total=0.11s
+DOY 236: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.11s
+DOY 188: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 237: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 189: io=0.02s  cmp=0.0818s  wr=0.01s  total=0.10s
+DOY 238: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 190: io=0.02s  cmp=0.0835s  wr=0.00s  total=0.10s
+DOY 239: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 191: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 240: io=0.02s  cmp=0.0791s  wr=0.01s  total=0.11s
+DOY 192: io=0.02s  cmp=0.0822s  wr=0.01s  total=0.11s
+DOY 241: io=0.02s  cmp=0.0808s  wr=0.01s  total=0.10s
+DOY 193: io=0.02s  cmp=0.0820s  wr=0.01s  total=0.11s
+DOY 242: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.10s
+DOY 194: io=0.02s  cmp=0.0816s  wr=0.01s  total=0.10s
+DOY 243: io=0.00s  cmp=0.0589s  wr=0.01s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 1/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.88 s  ( 15.2%)
+  Compute  (quickselect):        3.70 s  ( 63.8%)
+  Output write:                  0.23 s  (  4.0%)
+  ----------------------------------------
+  WALL TIME:                     5.80 s
+============================================
+DOY 195: io=0.02s  cmp=0.0815s  wr=0.01s  total=0.10s
+DOY 196: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.10s
+DOY 197: io=0.00s  cmp=0.0601s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 0/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.78 s  ( 13.0%)
+  Compute  (quickselect):        3.69 s  ( 61.3%)
+  Output write:                  0.26 s  (  4.3%)
+  ----------------------------------------
+  WALL TIME:                     6.02 s
+============================================
+  Run 3 total time: 10.410317098 s
+
+--- Run 4/5 ---
+srun: ROUTE: split_hostlist: hl=f17r4n[00-01] tree_width 0
+[rank 1/2] Data path: /dev/shm/sst_cache/
+[rank 1/2] DOY range: 198 - 243 (46 days)
+[rank 0/2] Data path: /dev/shm/sst_cache/
+[rank 0/2] DOY range: 152 - 197 (46 days)
+SST raw format: float64  (converting to float32)
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+lon_num = 1440, lat_num = 721
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 152...
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 198...
+Initial data copied to GPU.
+DOY 152: io=0.00s  cmp=0.0639s  wr=0.00s  total=0.07s
+Initial data copied to GPU.
+DOY 153: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 198: io=0.00s  cmp=0.0656s  wr=0.00s  total=0.07s
+DOY 154: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 199: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 155: io=0.02s  cmp=0.0799s  wr=0.00s  total=0.10s
+DOY 200: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 156: io=0.02s  cmp=0.0796s  wr=0.00s  total=0.10s
+DOY 201: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 157: io=0.02s  cmp=0.0795s  wr=0.00s  total=0.10s
+DOY 202: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 158: io=0.02s  cmp=0.0794s  wr=0.00s  total=0.10s
+DOY 203: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.10s
+DOY 159: io=0.02s  cmp=0.0792s  wr=0.00s  total=0.10s
+DOY 204: io=0.02s  cmp=0.0802s  wr=0.00s  total=0.10s
+DOY 160: io=0.02s  cmp=0.0792s  wr=0.01s  total=0.11s
+DOY 205: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 161: io=0.02s  cmp=0.0791s  wr=0.00s  total=0.10s
+DOY 206: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 162: io=0.02s  cmp=0.0784s  wr=0.00s  total=0.10s
+DOY 207: io=0.02s  cmp=0.0802s  wr=0.01s  total=0.11s
+DOY 163: io=0.02s  cmp=0.0831s  wr=0.00s  total=0.11s
+DOY 208: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.11s
+DOY 164: io=0.02s  cmp=0.0816s  wr=0.01s  total=0.11s
+DOY 209: io=0.02s  cmp=0.0802s  wr=0.01s  total=0.11s
+DOY 165: io=0.02s  cmp=0.0825s  wr=0.01s  total=0.11s
+DOY 210: io=0.02s  cmp=0.0836s  wr=0.00s  total=0.11s
+DOY 166: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.10s
+DOY 211: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 167: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.11s
+DOY 212: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 168: io=0.02s  cmp=0.0803s  wr=0.01s  total=0.10s
+DOY 213: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.11s
+DOY 169: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 214: io=0.02s  cmp=0.0857s  wr=0.00s  total=0.11s
+DOY 170: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 215: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 171: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 216: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 172: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 217: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 173: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 218: io=0.02s  cmp=0.0800s  wr=0.01s  total=0.10s
+DOY 174: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 219: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.10s
+DOY 175: io=0.02s  cmp=0.0859s  wr=0.00s  total=0.11s
+DOY 220: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 176: io=0.02s  cmp=0.0822s  wr=0.00s  total=0.10s
+DOY 221: io=0.02s  cmp=0.0799s  wr=0.00s  total=0.10s
+DOY 177: io=0.02s  cmp=0.0821s  wr=0.02s  total=0.12s
+DOY 222: io=0.02s  cmp=0.0801s  wr=0.01s  total=0.11s
+DOY 223: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 178: io=0.04s  cmp=0.1036s  wr=0.02s  total=0.16s
+DOY 179: io=0.02s  cmp=0.0820s  wr=0.01s  total=0.11s
+DOY 224: io=0.06s  cmp=0.0882s  wr=0.01s  total=0.15s
+DOY 180: io=0.02s  cmp=0.0963s  wr=0.00s  total=0.12s
+DOY 225: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.10s
+DOY 181: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.11s
+DOY 226: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.10s
+DOY 182: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.11s
+DOY 227: io=0.02s  cmp=0.0797s  wr=0.00s  total=0.10s
+DOY 228: io=0.02s  cmp=0.0796s  wr=0.00s  total=0.10s
+DOY 183: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 229: io=0.02s  cmp=0.0799s  wr=0.01s  total=0.11s
+DOY 184: io=0.02s  cmp=0.0920s  wr=0.00s  total=0.12s
+DOY 230: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 185: io=0.02s  cmp=0.0843s  wr=0.00s  total=0.11s
+DOY 231: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 186: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 232: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 187: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 233: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 188: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 234: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 189: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.10s
+DOY 235: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 190: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 236: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 191: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 237: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 192: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 238: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 193: io=0.02s  cmp=0.0819s  wr=0.00s  total=0.10s
+DOY 239: io=0.02s  cmp=0.0805s  wr=0.00s  total=0.10s
+DOY 194: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.10s
+DOY 240: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 195: io=0.02s  cmp=0.0801s  wr=0.01s  total=0.10s
+DOY 241: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 196: io=0.02s  cmp=0.0850s  wr=0.00s  total=0.11s
+DOY 197: io=0.00s  cmp=0.0601s  wr=0.00s  total=0.06s
+DOY 242: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+
+============================================
+  TIMING SUMMARY [rank 0/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.81 s  ( 13.9%)
+  Compute  (quickselect):        3.75 s  ( 64.2%)
+  Output write:                  0.26 s  (  4.4%)
+  ----------------------------------------
+  WALL TIME:                     5.84 s
+============================================
+DOY 243: io=0.00s  cmp=0.0589s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 1/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.87 s  ( 14.7%)
+  Compute  (quickselect):        3.67 s  ( 62.3%)
+  Output write:                  0.22 s  (  3.8%)
+  ----------------------------------------
+  WALL TIME:                     5.89 s
+============================================
+  Run 4 total time: 9.808467674 s
+
+--- Run 5/5 ---
+srun: ROUTE: split_hostlist: hl=f17r4n[00-01] tree_width 0
+[rank 0/2] Data path: /dev/shm/sst_cache/
+[rank 0/2] DOY range: 152 - 197 (46 days)
+[rank 1/2] Data path: /dev/shm/sst_cache/
+[rank 1/2] DOY range: 198 - 243 (46 days)
+SST raw format: float64  (converting to float32)
+SST raw format: float64  (converting to float32)
+lon_num = 1440, lat_num = 721
+lon_num = 1440, lat_num = 721
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 198...
+GPU memory allocated: sst=1.3 GB, results=15.8 MB
+Initializing buffer with NaN...
+Scanning file existence...
+File scan complete.
+Loading initial window for DOY 152...
+Initial data copied to GPU.
+DOY 198: io=0.00s  cmp=0.0649s  wr=0.01s  total=0.07s
+Initial data copied to GPU.
+DOY 199: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.11s
+DOY 152: io=0.00s  cmp=0.0637s  wr=0.00s  total=0.07s
+DOY 200: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 153: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 201: io=0.02s  cmp=0.0805s  wr=0.01s  total=0.10s
+DOY 154: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 155: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 202: io=0.02s  cmp=0.0940s  wr=0.00s  total=0.12s
+DOY 156: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 203: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 157: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 204: io=0.02s  cmp=0.0866s  wr=0.01s  total=0.11s
+DOY 158: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 205: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.10s
+DOY 159: io=0.02s  cmp=0.0800s  wr=0.00s  total=0.10s
+DOY 206: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.10s
+DOY 160: io=0.02s  cmp=0.0803s  wr=0.00s  total=0.10s
+DOY 207: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.10s
+DOY 161: io=0.02s  cmp=0.0801s  wr=0.00s  total=0.10s
+DOY 208: io=0.03s  cmp=0.0811s  wr=0.00s  total=0.12s
+DOY 162: io=0.02s  cmp=0.0798s  wr=0.00s  total=0.10s
+DOY 209: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.10s
+DOY 163: io=0.02s  cmp=0.0813s  wr=0.01s  total=0.11s
+DOY 210: io=0.02s  cmp=0.0889s  wr=0.01s  total=0.11s
+DOY 164: io=0.02s  cmp=0.0810s  wr=0.00s  total=0.10s
+DOY 211: io=0.02s  cmp=0.0851s  wr=0.00s  total=0.11s
+DOY 165: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.10s
+DOY 212: io=0.02s  cmp=0.0947s  wr=0.00s  total=0.12s
+DOY 166: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 213: io=0.02s  cmp=0.0840s  wr=0.00s  total=0.11s
+DOY 167: io=0.02s  cmp=0.0815s  wr=0.01s  total=0.11s
+DOY 214: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.11s
+DOY 168: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 215: io=0.02s  cmp=0.0813s  wr=0.00s  total=0.11s
+DOY 169: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.11s
+DOY 170: io=0.02s  cmp=0.0812s  wr=0.01s  total=0.10s
+DOY 216: io=0.02s  cmp=0.1026s  wr=0.01s  total=0.13s
+DOY 171: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 217: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 172: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 218: io=0.02s  cmp=0.0813s  wr=0.01s  total=0.11s
+DOY 173: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 219: io=0.02s  cmp=0.0811s  wr=0.01s  total=0.11s
+DOY 174: io=0.02s  cmp=0.0822s  wr=0.00s  total=0.10s
+DOY 220: io=0.02s  cmp=0.0811s  wr=0.00s  total=0.10s
+DOY 175: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 221: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 176: io=0.02s  cmp=0.0822s  wr=0.00s  total=0.10s
+DOY 222: io=0.02s  cmp=0.0816s  wr=0.01s  total=0.10s
+DOY 177: io=0.02s  cmp=0.0823s  wr=0.00s  total=0.10s
+DOY 223: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.11s
+DOY 224: io=0.05s  cmp=0.1029s  wr=0.00s  total=0.16s
+DOY 178: io=0.09s  cmp=0.0891s  wr=0.00s  total=0.18s
+DOY 179: io=0.02s  cmp=0.0820s  wr=0.00s  total=0.10s
+DOY 225: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 180: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.11s
+DOY 226: io=0.02s  cmp=0.0812s  wr=0.01s  total=0.11s
+DOY 181: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 227: io=0.02s  cmp=0.0814s  wr=0.00s  total=0.10s
+DOY 182: io=0.02s  cmp=0.0821s  wr=0.01s  total=0.10s
+DOY 228: io=0.02s  cmp=0.0809s  wr=0.00s  total=0.10s
+DOY 183: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 229: io=0.02s  cmp=0.0812s  wr=0.00s  total=0.11s
+DOY 184: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 230: io=0.02s  cmp=0.0808s  wr=0.00s  total=0.10s
+DOY 185: io=0.02s  cmp=0.0821s  wr=0.00s  total=0.11s
+DOY 231: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 186: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 232: io=0.02s  cmp=0.0807s  wr=0.01s  total=0.10s
+DOY 187: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.10s
+DOY 233: io=0.02s  cmp=0.0808s  wr=0.01s  total=0.10s
+DOY 234: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 188: io=0.02s  cmp=0.0906s  wr=0.00s  total=0.11s
+DOY 189: io=0.02s  cmp=0.0817s  wr=0.01s  total=0.10s
+DOY 235: io=0.02s  cmp=0.0809s  wr=0.01s  total=0.11s
+DOY 190: io=0.02s  cmp=0.0817s  wr=0.00s  total=0.11s
+DOY 236: io=0.02s  cmp=0.0806s  wr=0.01s  total=0.11s
+DOY 191: io=0.02s  cmp=0.0815s  wr=0.00s  total=0.10s
+DOY 237: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 192: io=0.02s  cmp=0.0816s  wr=0.00s  total=0.10s
+DOY 238: io=0.02s  cmp=0.0860s  wr=0.00s  total=0.11s
+DOY 193: io=0.02s  cmp=0.0821s  wr=0.01s  total=0.11s
+DOY 239: io=0.02s  cmp=0.0807s  wr=0.00s  total=0.10s
+DOY 194: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.10s
+DOY 240: io=0.02s  cmp=0.0806s  wr=0.00s  total=0.10s
+DOY 195: io=0.02s  cmp=0.0814s  wr=0.01s  total=0.10s
+DOY 241: io=0.02s  cmp=0.0804s  wr=0.01s  total=0.10s
+DOY 196: io=0.02s  cmp=0.0818s  wr=0.00s  total=0.11s
+DOY 242: io=0.02s  cmp=0.0804s  wr=0.00s  total=0.10s
+DOY 197: io=0.00s  cmp=0.0601s  wr=0.00s  total=0.06s
+DOY 243: io=0.00s  cmp=0.0588s  wr=0.00s  total=0.06s
+
+============================================
+  TIMING SUMMARY [rank 0/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.84 s  ( 14.3%)
+  Compute  (quickselect):        3.72 s  ( 63.7%)
+  Output write:                  0.22 s  (  3.8%)
+  ----------------------------------------
+  WALL TIME:                     5.84 s
+============================================
+
+============================================
+  TIMING SUMMARY [rank 1/2] (46 DOYs)
+============================================
+  File I/O (pread+scatter):      0.87 s  ( 14.9%)
+  Compute  (quickselect):        3.78 s  ( 64.7%)
+  Output write:                  0.24 s  (  4.1%)
+  ----------------------------------------
+  WALL TIME:                     5.84 s
+============================================
+  Run 5 total time: 9.861406165 s
+
+============================================
+  BEST FULL RUN TIME :     9.78 s
+============================================
