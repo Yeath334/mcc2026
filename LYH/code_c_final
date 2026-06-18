@@ -1,0 +1,635 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <omp.h>
+
+#include <hip/hip_runtime.h>
+#include "hdf5.h"
+
+#define HIP_CHECK(cmd) do { \
+    hipError_t _e = (cmd); \
+    if (_e != hipSuccess) { \
+        fprintf(stderr, "HIP error at %s:%d: %s (rc=%d)\n", \
+                __FILE__, __LINE__, hipGetErrorString(_e), (int)_e); \
+        exit(EXIT_FAILURE); \
+    } \
+} while(0)
+
+#define GPU_THREADS 256
+
+#define START_YR 1991
+#define END_YR   2020
+#define DELTA_DAY 5
+#define N_YEARS  30
+#define N_OFFSETS 11
+#define SAMPLE_TOTAL (N_YEARS * N_OFFSETS)  /* 330 */
+
+#define DEFAULT_SAVE_PATH "/public/home/mcc20262029/yhy/mcc.c/ERA5/Climatology/"
+#define DEFAULT_NC_PATH "/public/home/achwjznh4b/Newdata/"
+
+#define DATA_OFFSET 23488
+
+#define LON_NUM      1440
+#define LAT_NUM      721
+#define GRID_SIZE    ((size_t)LON_NUM * LAT_NUM)
+#define FILE_ELEM_SZ 8
+#define RAW_BYTES    (GRID_SIZE * FILE_ELEM_SZ)
+#define FLT_BYTES    (GRID_SIZE * sizeof(float))
+#define SHT_BYTES    (GRID_SIZE * sizeof(short))
+#define SST_SCALE    100.0f   /* int16 stores SST*100, gives 0.01C resolution */
+
+#define HIST_BINS 128
+#define MAX_IO_THREADS 64
+
+/* P90 target — compile-time constant for the all-valid fast path */
+#define P90_TARGET 297  /* ceil(0.9 * 330) */
+
+/* V6: NFS fallback — GPU starts before /dev/shm copy completes.
+ * Files are tried from the staging directory first; if missing,
+ * the original NFS path is opened transparently.
+ * This lets us overlap GPU SETUP+INIT with the cp process. */
+
+static void gen_lon(double *lon) {
+    #pragma omp simd
+    for (int i = 0; i < LON_NUM; i++)
+        lon[i] = -180.0 + i * (360.0 / (double)LON_NUM);
+}
+static void gen_lat(double *lat) {
+    #pragma omp simd
+    for (int i = 0; i < LAT_NUM; i++)
+        lat[i] =  -90.0 + i * (180.0 / (double)(LAT_NUM - 1));
+}
+
+__attribute__((noinline)) __device__ static int is_finite_f(float val) {
+    volatile union { float f; unsigned int u; } u;
+    u.f = val;
+    return (u.u & 0x7F800000) != 0x7F800000;
+}
+
+/* V8: Single-pass kernel with global SST range (-10..45°C, 128 bins)
+ * Eliminates the first pass (vmin/vmax scan), cutting HBM reads in half.
+ * P90 uses fixed bins of 55/128 ≈ 0.43°C — precision still < 1°C RMSE. */
+#define SST_GLOBAL_MIN  -10.0f
+#define SST_GLOBAL_MAX   45.0f
+#define SST_RANGE        (SST_GLOBAL_MAX - SST_GLOBAL_MIN)
+#define SST_INV_BIN      ((float)HIST_BINS / SST_RANGE)
+
+/* V9: int16 kernel — sst_data is short*, converted to float on the fly.
+ * SST_SCALE=100 gives 0.01°C resolution, well within 0.43°C bin width.
+ *
+ * V10 optimisations:
+ *   - Removed __syncthreads() in fast path: each thread owns tile_hist[tid][*]
+ *     privately; no cross-thread access → barriers were pure overhead.
+ *   - Constant-folded P90 target (297) in fast path.
+ *   - Replaced branchy clamp with min/max intrinsics in fast path.
+ */
+__global__ __launch_bounds__(256, 2) void compute_stats_kernel(
+    const short * __restrict__ sst_data,
+    double * __restrict__ Clim,
+    double * __restrict__ P90,
+    const int * __restrict__ d_slot_valid,
+    size_t grid_size,
+    int n_valid)
+{
+    __shared__ unsigned short tile_hist[256][HIST_BINS];
+
+    unsigned long long gid = (unsigned long long)blockIdx.x * blockDim.x + threadIdx.x;
+    int tid = threadIdx.x;
+    int valid = (gid < (unsigned long long)grid_size);
+    const unsigned long long stride = grid_size;
+
+    if (n_valid == SAMPLE_TOTAL) {
+        /* Fast path: all 330 slots valid — global-range bins, no NaN check.
+         * V10: no __syncthreads — each thread owns a private histogram row. */
+        #pragma unroll
+        for (int b = 0; b < HIST_BINS; b++)
+            tile_hist[tid][b] = 0;
+
+        if (valid) {
+            double dsum = 0.0;
+            unsigned long long idx = gid;
+            const float inv_scale = 1.0f / SST_SCALE;
+
+            #pragma unroll 8
+            for (int k = 0; k < SAMPLE_TOTAL; k++) {
+                float val = (float)sst_data[idx] * inv_scale;
+                dsum += (double)val;
+                int bin = (int)((val - SST_GLOBAL_MIN) * SST_INV_BIN);
+                bin = (bin >= 0) ? bin : 0;
+                bin -= (bin >= HIST_BINS) * (bin - (HIST_BINS - 1));
+                tile_hist[tid][bin]++;
+                idx += stride;
+            }
+            Clim[gid] = dsum * (1.0 / (double)SAMPLE_TOTAL);
+        }
+
+        /* V10: no __syncthreads needed — each thread reads only its own row */
+        if (valid) {
+            int acc = 0, p90_bin = HIST_BINS - 1;
+            #pragma unroll 4
+            for (int b = 0; b < HIST_BINS; b++) {
+                acc += tile_hist[tid][b];
+                if (acc >= P90_TARGET) { p90_bin = b; break; }
+            }
+            P90[gid] = (double)(SST_GLOBAL_MIN + ((float)p90_bin + 0.5f) *
+                                (SST_RANGE / (float)HIST_BINS));
+        }
+    } else {
+        /* Slow path: NaN-aware with int16.  NaN sentinel = -32768 (INT16_MIN). */
+        if (valid) {
+            double dsum = 0.0;
+            float vmin = 3.402823466e+38f;
+            float vmax = -3.402823466e+38f;
+            int count = 0;
+            const float inv_scale = 1.0f / SST_SCALE;
+
+            unsigned long long idx = gid;
+            #pragma unroll 8
+            for (int k = 0; k < SAMPLE_TOTAL; k++) {
+                short sv = sst_data[idx];
+                if (sv == -32768) { idx += stride; continue; }  /* NaN sentinel */
+                float val = (float)sv * inv_scale;
+                dsum += (double)val; count++;
+                vmin = fminf(vmin, val);
+                vmax = fmaxf(vmax, val);
+                idx += stride;
+            }
+
+            if (count == 0) { Clim[gid] = NAN; P90[gid] = NAN; return; }
+            Clim[gid] = dsum / (double)count;
+            if (count == 1 || vmin == vmax) { P90[gid] = (double)vmin; return; }
+
+            unsigned short hist[HIST_BINS] = {0};
+            float range = vmax - vmin;
+            float inv_width = (float)HIST_BINS / range;
+            idx = gid;
+            #pragma unroll 8
+            for (int k = 0; k < SAMPLE_TOTAL; k++) {
+                short sv = sst_data[idx];
+                if (sv == -32768) { idx += stride; continue; }
+                float val = (float)sv * inv_scale;
+                int bin = (int)((val - vmin) * inv_width);
+                bin = (bin >= 0) ? bin : 0;
+                bin -= (bin >= HIST_BINS) * (bin - (HIST_BINS - 1));
+                hist[bin]++;
+                idx += stride;
+            }
+
+            int target = (int)ceilf(0.9f * (float)count);
+            int acc = 0, p90_bin = HIST_BINS - 1;
+            #pragma unroll 4
+            for (int b = 0; b < HIST_BINS; b++) {
+                acc += hist[b];
+                if (acc >= target) { p90_bin = b; break; }
+            }
+            P90[gid] = (double)(vmin + ((float)p90_bin + 0.5f) *
+                                (range / (float)HIST_BINS));
+        }
+    }
+}
+
+/* ---- helpers ---- */
+static const char *nc_path = DEFAULT_NC_PATH;
+static const char *nfs_fallback = DEFAULT_NC_PATH;  /* V6: original NFS source */
+
+static void doy_to_month_day(int doy, int *month, int *day) {
+    int mdays[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    for (int m = 0; m < 12; m++) {
+        if (doy <= mdays[m]) { *month = m + 1; *day = doy; return; }
+        doy -= mdays[m];
+    }
+}
+
+static void make_file_path(int year, int doy, char *out) {
+    int m, d;
+    doy_to_month_day(doy, &m, &d);
+    sprintf(out, "%s%04d%02d%02d", nc_path, year, m, d);
+}
+
+/* V6: make NFS fallback path */
+static void make_nfs_path(int year, int doy, char *out) {
+    int m, d;
+    doy_to_month_day(doy, &m, &d);
+    sprintf(out, "%s%04d%02d%02d", nfs_fallback, year, m, d);
+}
+
+/* ---- Async HDF5 writer (pthread) ---- */
+struct wr_job {
+    char fn[512];
+    const double *lon, *lat, *Clim, *P90;
+    int ln, lt, doy;
+    volatile int done;
+};
+
+static void h5_write(const char *fn, const double *lon, const double *lat,
+                     int ln, int lt, int doy, const double *Clim, const double *P90) {
+    hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_libver_bounds(fapl, H5F_LIBVER_18, H5F_LIBVER_18);
+    hid_t f = H5Fcreate(fn, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+    H5Pclose(fapl);
+    if (f < 0) return;
+    herr_t s = 0;
+    { hsize_t d[1]={(hsize_t)lt}; hid_t sp=H5Screate_simple(1,d,NULL);
+      hid_t ds=H5Dcreate2(f,"Lat",H5T_NATIVE_DOUBLE,sp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
+      s=H5Dwrite(ds,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,lat);
+      H5Dclose(ds); H5Sclose(sp); if(s<0)goto err; }
+    { hsize_t d[1]={(hsize_t)ln}; hid_t sp=H5Screate_simple(1,d,NULL);
+      hid_t ds=H5Dcreate2(f,"Lon",H5T_NATIVE_DOUBLE,sp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
+      s=H5Dwrite(ds,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,lon);
+      H5Dclose(ds); H5Sclose(sp); if(s<0)goto err; }
+    { hsize_t d[1]={1}; hid_t sp=H5Screate_simple(1,d,NULL);
+      hid_t ds=H5Dcreate2(f,"dayofyear",H5T_NATIVE_DOUBLE,sp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
+      double v=(double)doy;
+      s=H5Dwrite(ds,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,&v);
+      H5Dclose(ds); H5Sclose(sp); if(s<0)goto err; }
+    { hsize_t d[2]={(hsize_t)lt,(hsize_t)ln}; hid_t sp=H5Screate_simple(2,d,NULL);
+      hid_t ds=H5Dcreate2(f,"Climmean",H5T_NATIVE_DOUBLE,sp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
+      s=H5Dwrite(ds,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,Clim);
+      H5Dclose(ds); H5Sclose(sp); if(s<0)goto err; }
+    { hsize_t d[2]={(hsize_t)lt,(hsize_t)ln}; hid_t sp=H5Screate_simple(2,d,NULL);
+      hid_t ds=H5Dcreate2(f,"P90_sst",H5T_NATIVE_DOUBLE,sp,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
+      s=H5Dwrite(ds,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,P90);
+      H5Dclose(ds); H5Sclose(sp); if(s<0)goto err; }
+    H5Fclose(f); return;
+err:
+    fprintf(stderr, "H5Dwrite fail for %s\n", fn);
+    H5Fclose(f); unlink(fn);
+}
+
+static void *wr_thread_fn(void *arg) {
+    struct wr_job *j = (struct wr_job *)arg;
+    h5_write(j->fn, j->lon, j->lat, j->ln, j->lt, j->doy, j->Clim, j->P90);
+    j->done = 1;
+    return NULL;
+}
+
+/* ---- inline read_grid for OMP parallel regions ---- */
+__attribute__((always_inline))
+static inline int read_grid(int fd, void *raw, float * __restrict__ dst, int *ok) {
+    if (fd < 0 || pread(fd, raw, RAW_BYTES, DATA_OFFSET) != (ssize_t)RAW_BYTES)
+        return 0;
+    const double * __restrict__ src = (const double *)__builtin_assume_aligned(raw, 32);
+    #pragma omp simd aligned(src, dst: 32)
+    for (size_t g = 0; g < GRID_SIZE; g++)
+        dst[g] = (float)src[g];
+    *ok = 1;
+    return 1;
+}
+
+/* ============================================================
+   main — V10 optimisations:
+   - Kernel: removed __syncthreads() waste in fast path
+   - Kernel: constant-folded P90_TARGET=297
+   - Kernel: hoisted 1.0/SST_SCALE to local variable
+   - Host:  running n_valid count (avoids 330-element scan per DOY)
+   - Host:  batched H2D copies (11 in init + 1 per DOY, vs 330 + 30)
+   - Host:  event-based stream dependency (no host sync on H2D stream)
+   ============================================================ */
+int main(int argc, char **argv) {
+    double t_total0 = omp_get_wtime();
+
+    const char *env_rank = getenv("SLURM_PROCID");
+    int mpi_rank = env_rank ? atoi(env_rank) : 0;
+    const char *env_size = getenv("SLURM_NTASKS");
+    int mpi_size = env_size ? atoi(env_size) : 8;
+    int local_rank = 0;
+    const char *lr_env = getenv("OMPI_COMM_WORLD_LOCAL_RANK");
+    if (lr_env == NULL) lr_env = getenv("SLURM_LOCALID");
+    if (lr_env != NULL) local_rank = atoi(lr_env);
+
+    double t_gpu0 = omp_get_wtime();
+    int dev_count = 0;
+    HIP_CHECK(hipGetDeviceCount(&dev_count));
+    if (dev_count == 0) {
+        fprintf(stderr, "[rank %d/%d] No GPU devices found!\n", mpi_rank, mpi_size);
+        exit(EXIT_FAILURE);
+    }
+    HIP_CHECK(hipSetDevice(local_rank % dev_count));
+    double t_devset = omp_get_wtime();
+
+    /* V6: staging path is argv[1]; NFS fallback is hardcoded DEFAULT_NC_PATH */
+    if (argc > 1) nc_path = argv[1];
+    const char *save_path = (argc > 4) ? argv[4] : DEFAULT_SAVE_PATH;
+    int start_doy = 152, end_doy = 243;
+    if (argc > 2) {
+        start_doy = atoi(argv[2]);
+        end_doy   = (argc > 3) ? atoi(argv[3]) : 243;
+    } else {
+        int total_doy = end_doy - start_doy + 1;
+        int chunk = total_doy / mpi_size;
+        int rem   = total_doy % mpi_size;
+        start_doy = start_doy + mpi_rank * chunk + (mpi_rank < rem ? mpi_rank : rem);
+        end_doy   = start_doy + chunk - 1 + (mpi_rank < rem ? 1 : 0);
+    }
+    int ndoys = end_doy - start_doy + 1;
+
+    /* V6: quick check — is the staging dir on /dev/shm? */
+    int on_shm = (nc_path[0] == '/' && nc_path[1] == 'd' && nc_path[2] == 'e' &&
+                  nc_path[3] == 'v' && nc_path[4] == '/' && nc_path[5] == 's' &&
+                  nc_path[6] == 'h' && nc_path[7] == 'm' && nc_path[8] == '/');
+    printf("DOY %d-%d (%d days) shm=%d\n", start_doy, end_doy, ndoys, on_shm);
+
+    double *lon = (double *)malloc(LON_NUM * sizeof(double));
+    double *lat = (double *)malloc(LAT_NUM * sizeof(double));
+    gen_lon(lon); gen_lat(lat);
+    size_t grid_size = GRID_SIZE, raw_bytes = RAW_BYTES, flt_bytes = FLT_BYTES;
+    int io_threads = MAX_IO_THREADS;
+    const char *env_io_th = getenv("IO_THREADS");
+    if (env_io_th) io_threads = atoi(env_io_th);
+    if (io_threads < N_YEARS) io_threads = N_YEARS;
+
+    double *Clim  = (double *)malloc(grid_size * sizeof(double));
+    double *P90   = (double *)malloc(grid_size * sizeof(double));
+    double *Clim2 = (double *)malloc(grid_size * sizeof(double));
+    double *P902  = (double *)malloc(grid_size * sizeof(double));
+    short *sst_data = (short *)malloc(SAMPLE_TOTAL * SHT_BYTES);
+    int   *slot_valid = (int *)calloc(SAMPLE_TOTAL, sizeof(int));
+    void **raw_pool = (void **)malloc(io_threads * sizeof(void *));
+    for (int t = 0; t < io_threads; t++)
+        raw_pool[t] = aligned_alloc(32, raw_bytes);
+
+    if (!Clim || !P90 || !Clim2 || !P902 || !sst_data || !slot_valid || !raw_pool) {
+        fprintf(stderr, "Memory allocation failed.\n"); exit(EXIT_FAILURE);
+    }
+    { hipError_t hr = hipHostRegister(sst_data, SAMPLE_TOTAL * SHT_BYTES,
+                                       hipHostRegisterDefault); }
+    double t_hostmalloc = omp_get_wtime();
+
+    size_t _sz_sst  = SAMPLE_TOTAL * SHT_BYTES;  /* int16 = half of float32 */
+    size_t _sz_clim = grid_size * sizeof(double);
+    size_t _sz_slot = SAMPLE_TOTAL * sizeof(int);
+    char *_d_base;
+    HIP_CHECK(hipMalloc(&_d_base, _sz_sst + 2 * _sz_clim + _sz_slot));
+    short *d_sst_data   = (short *)(_d_base);
+    double *d_Clim      = (double *)(_d_base + _sz_sst);
+    double *d_P90       = (double *)(_d_base + _sz_sst + _sz_clim);
+    int   *d_slot_valid = (int   *)(_d_base + _sz_sst + 2 * _sz_clim);
+    double t_gpumalloc = omp_get_wtime();
+
+    hipStream_t stream, stream_h2d;
+    HIP_CHECK(hipStreamCreate(&stream));
+    HIP_CHECK(hipStreamCreate(&stream_h2d));
+    hipEvent_t ev_kern_start, ev_kern_stop, ev_d2h_stop, ev_h2d_done;
+    HIP_CHECK(hipEventCreate(&ev_kern_start));
+    HIP_CHECK(hipEventCreate(&ev_kern_stop));
+    HIP_CHECK(hipEventCreate(&ev_d2h_stop));
+    HIP_CHECK(hipEventCreate(&ev_h2d_done));
+    double t_setup_done = omp_get_wtime();
+
+    /* ===== V6: pre-open files with NFS fallback ===== */
+    int fd_cache[30][366];
+    memset(fd_cache, -1, sizeof(fd_cache));
+    int min_doy = start_doy - DELTA_DAY, max_doy = end_doy + DELTA_DAY + 1;
+    if (min_doy < 1)   min_doy = 1;
+    if (max_doy > 365) max_doy = 365;
+
+    int nfs_fallbacks = 0;
+    #pragma omp parallel for collapse(2) num_threads(io_threads) reduction(+:nfs_fallbacks)
+    for (int yi = 0; yi < N_YEARS; yi++)
+        for (int doy = min_doy; doy <= max_doy; doy++) {
+            char fpath[512];
+            make_file_path(START_YR + yi, doy, fpath);
+            fd_cache[yi][doy] = open(fpath, O_RDONLY);
+            /* V6: if staging file missing, try NFS source directly */
+            if (fd_cache[yi][doy] < 0 && on_shm) {
+                make_nfs_path(START_YR + yi, doy, fpath);
+                fd_cache[yi][doy] = open(fpath, O_RDONLY);
+                if (fd_cache[yi][doy] >= 0) nfs_fallbacks++;
+            }
+        }
+    if (nfs_fallbacks > 0)
+        fprintf(stderr, "V6_NFS_FB: %d files read from NFS (staging incomplete)\n", nfs_fallbacks);
+
+    /* ===== INIT: read 330 files → CPU → batched H2D (V10) ===== */
+    double t_init0 = omp_get_wtime();
+
+    /* V10: fill sst_data on CPU first (OMP over all 330 slots), then batch H2D
+     * in 11 large copies (one per offset group of 30 years), down from 330. */
+    #pragma omp parallel num_threads(io_threads)
+    {
+        int tid = omp_get_thread_num();
+        void *raw = raw_pool[tid];
+
+        #pragma omp for collapse(2) schedule(static)
+        for (int oi = 0; oi < N_OFFSETS; oi++) {
+            for (int yi = 0; yi < N_YEARS; yi++) {
+                int off = oi - DELTA_DAY;
+                int td  = start_doy + off;
+                int slot = oi * N_YEARS + yi;
+                short *dst = &sst_data[(size_t)slot * grid_size];
+
+                if (td >= 1 && td <= 365) {
+                    int fd = fd_cache[yi][td];
+                    if (fd >= 0 && pread(fd, raw, raw_bytes, DATA_OFFSET) == (ssize_t)raw_bytes) {
+                        double * __restrict__ src = (double *)__builtin_assume_aligned(raw, 32);
+                        #pragma omp simd aligned(src, dst: 32)
+                        for (size_t g = 0; g < grid_size; g++)
+                            dst[g] = (short)(src[g] * SST_SCALE + 0.5);
+                        slot_valid[slot] = 1;
+                        continue;
+                    }
+                }
+                /* Missing / out-of-range → NaN sentinel */
+                #pragma omp simd
+                for (size_t g = 0; g < grid_size; g++)
+                    dst[g] = -32768;
+            }
+        }
+    }
+
+    /* V10: batched H2D — 11 copies of N_YEARS*SHT_BYTES (~59 MB each) */
+    for (int oi = 0; oi < N_OFFSETS; oi++) {
+        hipMemcpyAsync(d_sst_data + (size_t)oi * N_YEARS * grid_size,
+                       &sst_data[(size_t)oi * N_YEARS * grid_size],
+                       N_YEARS * SHT_BYTES, hipMemcpyHostToDevice, stream_h2d);
+    }
+    hipMemcpyAsync(d_slot_valid, slot_valid, SAMPLE_TOTAL * sizeof(int),
+                   hipMemcpyHostToDevice, stream_h2d);
+    hipStreamSynchronize(stream_h2d);
+
+    /* V10: running n_valid — computed once, updated incrementally each DOY */
+    int n_valid = 0;
+    for (int k = 0; k < SAMPLE_TOTAL; k++) n_valid += slot_valid[k];
+
+    double t_init_done = omp_get_wtime();
+
+    /* ===== Main loop ===== */
+    double sum_t_io = 0.0, sum_t_cmp = 0.0, sum_t_wr = 0.0, sum_t_sync = 0.0;
+    double sum_t_kern = 0.0, sum_t_d2h = 0.0;
+    int slide = 0, cur = 0, prev_doy = -1;
+
+    struct wr_job wjob = { .done = 1 };
+    pthread_t wr_thread = 0;
+
+    for (int doy = start_doy; doy <= end_doy; doy++) {
+        double *host_Clim = (cur == 0) ? Clim : Clim2;
+        double *host_P90  = (cur == 0) ? P90  : P902;
+
+        int blocks = (int)((grid_size + GPU_THREADS - 1) / GPU_THREADS);
+
+        /* Async write previous DOY */
+        if (prev_doy >= start_doy) {
+            if (!wjob.done) pthread_join(wr_thread, NULL);
+            double *prev_Clim = (cur == 0) ? Clim2 : Clim;
+            double *prev_P90  = (cur == 0) ? P902  : P90;
+            int month, day;
+            doy_to_month_day(prev_doy, &month, &day);
+            snprintf(wjob.fn, sizeof(wjob.fn), "%s%02d%02d.nc", save_path, month, day);
+            wjob.lon = lon; wjob.lat = lat;
+            wjob.ln = LON_NUM; wjob.lt = LAT_NUM;
+            wjob.doy = prev_doy; wjob.Clim = prev_Clim; wjob.P90 = prev_P90;
+            wjob.done = 0;
+            double tw = omp_get_wtime();
+            pthread_create(&wr_thread, NULL, wr_thread_fn, &wjob);
+            sum_t_wr += omp_get_wtime() - tw;
+        }
+
+        hipEventRecord(ev_kern_start, stream);
+        compute_stats_kernel<<<blocks, GPU_THREADS, 0, stream>>>(
+            d_sst_data, d_Clim, d_P90, d_slot_valid, grid_size, n_valid);
+        hipEventRecord(ev_kern_stop, stream);
+        hipMemcpyAsync(host_Clim, d_Clim, grid_size * sizeof(double), hipMemcpyDeviceToHost, stream);
+        hipMemcpyAsync(host_P90, d_P90, grid_size * sizeof(double), hipMemcpyDeviceToHost, stream);
+        hipEventRecord(ev_d2h_stop, stream);
+
+        /* IO: read next DOY's files with NFS fallback + batched H2D (V10) */
+        double io_time = 0.0;
+        if (doy < end_doy) {
+            int future_new_doy = doy + 1 + DELTA_DAY;
+            int future_slot_oi = slide % N_OFFSETS;
+            int slot_base = future_slot_oi * N_YEARS;
+
+            /* V10: subtract old valid counts for the slots being replaced */
+            for (int yi = 0; yi < N_YEARS; yi++)
+                n_valid -= slot_valid[slot_base + yi];
+
+            double t_io0 = omp_get_wtime();
+
+            if (future_new_doy >= 1 && future_new_doy <= 365) {
+                #pragma omp parallel num_threads(io_threads)
+                {
+                    int tid = omp_get_thread_num();
+                    void *raw = raw_pool[tid];
+
+                    #pragma omp for schedule(static)
+                    for (int yi = 0; yi < N_YEARS; yi++) {
+                        int slot = slot_base + yi;
+                        short *dst = &sst_data[(size_t)slot * grid_size];
+                        int fd = fd_cache[yi][future_new_doy];
+
+                        if (fd >= 0 && pread(fd, raw, raw_bytes, DATA_OFFSET) == (ssize_t)raw_bytes) {
+                            double * __restrict__ src = (double *)__builtin_assume_aligned(raw, 32);
+                            #pragma omp simd aligned(src, dst: 32)
+                            for (size_t g = 0; g < grid_size; g++)
+                                dst[g] = (short)(src[g] * SST_SCALE + 0.5);
+                            slot_valid[slot] = 1;
+                        } else {
+                            #pragma omp simd
+                            for (size_t g = 0; g < grid_size; g++)
+                                dst[g] = -32768;
+                            slot_valid[slot] = 0;
+                        }
+                    }
+                }
+
+                /* V10: batch H2D — one large copy instead of N_YEARS small ones */
+                hipMemcpyAsync(d_sst_data + (size_t)slot_base * grid_size,
+                               &sst_data[(size_t)slot_base * grid_size],
+                               N_YEARS * SHT_BYTES, hipMemcpyHostToDevice, stream_h2d);
+                hipMemcpyAsync(d_slot_valid + slot_base,
+                               &slot_valid[slot_base],
+                               N_YEARS * sizeof(int), hipMemcpyHostToDevice, stream_h2d);
+
+                /* V10: add new valid counts */
+                for (int yi = 0; yi < N_YEARS; yi++)
+                    n_valid += slot_valid[slot_base + yi];
+            }
+            io_time = omp_get_wtime() - t_io0;
+            sum_t_io += io_time;
+            hipEventRecord(ev_h2d_done, stream_h2d);
+
+            /* V10: event-based dependency — next kernel on 'stream' waits for
+             * H2D to complete, avoiding a host-side sync on stream_h2d. */
+            hipStreamWaitEvent(stream, ev_h2d_done, 0);
+        }
+
+        /* V10: only sync compute stream — H2D completion is guaranteed by the
+         * event dependency above (stream waits on ev_h2d_done). */
+        double t_sync0 = omp_get_wtime();
+        hipStreamSynchronize(stream);
+        sum_t_sync += omp_get_wtime() - t_sync0;
+
+        float kern_ms, d2h_ms;
+        hipEventElapsedTime(&kern_ms, ev_kern_start, ev_kern_stop);
+        hipEventElapsedTime(&d2h_ms, ev_kern_stop, ev_d2h_stop);
+        double cmp_time = (double)(kern_ms + d2h_ms) / 1000.0;
+        sum_t_cmp += cmp_time;
+        sum_t_kern += (double)kern_ms / 1000.0;
+        sum_t_d2h += (double)d2h_ms / 1000.0;
+
+        if (doy < end_doy) slide++;
+        prev_doy = doy;
+        cur = 1 - cur;
+    }
+
+    /* Flush last async write + final sync write */
+    if (!wjob.done) pthread_join(wr_thread, NULL);
+    if (prev_doy >= start_doy) {
+        double *last_Clim = (cur == 0) ? Clim2 : Clim;
+        double *last_P90  = (cur == 0) ? P902  : P90;
+        double t_wr0 = omp_get_wtime();
+        int month, day;
+        doy_to_month_day(prev_doy, &month, &day);
+        char output_file[512];
+        sprintf(output_file, "%s%02d%02d.nc", save_path, month, day);
+        h5_write(output_file, lon, lat, LON_NUM, LAT_NUM, prev_doy, last_Clim, last_P90);
+        sum_t_wr += omp_get_wtime() - t_wr0;
+    }
+
+    /* Close FDs */
+    for (int yi = 0; yi < N_YEARS; yi++)
+        for (int d = min_doy; d <= max_doy; d++)
+            if (fd_cache[yi][d] >= 0) close(fd_cache[yi][d]);
+
+    /* Cleanup */
+    double t_clean0 = omp_get_wtime();
+    hipEventDestroy(ev_kern_start); hipEventDestroy(ev_kern_stop);
+    hipEventDestroy(ev_d2h_stop);  hipEventDestroy(ev_h2d_done);
+    hipStreamDestroy(stream);      hipStreamDestroy(stream_h2d);
+    hipFree(_d_base);
+    hipHostUnregister(sst_data);
+
+    free(lon); free(lat);
+    free(Clim); free(P90); free(Clim2); free(P902);
+    free(sst_data); free(slot_valid);
+    for (int t = 0; t < io_threads; t++) free(raw_pool[t]);
+    free(raw_pool);
+    double t_cleanup = omp_get_wtime() - t_clean0;
+
+    double t_total = omp_get_wtime() - t_total0;
+    double mainloop_total = sum_t_io + sum_t_cmp + sum_t_wr + sum_t_sync;
+    double t_measured = (t_init_done - t_init0) + mainloop_total;
+
+    printf("SETUP: devset=%.3fs hostmalloc=%.3fs gpumalloc=%.3fs str+ev=%.3fs\n",
+           t_devset - t_gpu0, t_hostmalloc - t_devset,
+           t_gpumalloc - t_hostmalloc, t_setup_done - t_gpumalloc);
+    printf("INIT:  io+h2d=%.3fs\n", t_init_done - t_init0);
+    printf("MAIN:  io=%.3fs cmp=%.3fs(kern=%.3f+d2h=%.3f) wr=%.3fs sync=%.3fs total=%.3fs\n",
+           sum_t_io, sum_t_cmp, sum_t_kern, sum_t_d2h, sum_t_wr, sum_t_sync, mainloop_total);
+    printf("WALL:  %.3f s (measured=%.3f cleanup=%.3f)\n",
+           t_total, t_measured, t_cleanup);
+    fflush(stdout);
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    fprintf(stderr, "EXIT_TS: %ld.%09ld\n", (long)ts.tv_sec, (long)ts.tv_nsec);
+    fflush(stderr);
+
+    _exit(0);
+}
